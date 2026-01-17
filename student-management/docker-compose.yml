@@ -1,0 +1,252 @@
+version: '3.8'
+
+services:
+  # MySQL for Student Service
+  mysql-student:
+    image: mysql:8.0
+    container_name: mysql-student
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: studentdb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-student-data:/var/lib/mysql
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # MySQL for Department Service
+  mysql-department:
+    image: mysql:8.0
+    container_name: mysql-department
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: departmentdb
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-department-data:/var/lib/mysql
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # MySQL for Enrollment Service (CQRS)
+  mysql-enrollment:
+    image: mysql:8.0
+    container_name: mysql-enrollment
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: enrollmentdb
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-enrollment-data:/var/lib/mysql
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Axon Server for CQRS/Event Sourcing
+  axon-server:
+    image: axoniq/axonserver:latest
+    container_name: axon-server
+    ports:
+      - "8024:8024"
+      - "8124:8124"
+    networks:
+      - microservices-network
+    environment:
+      - AXONIQ_AXONSERVER_NAME=axon-server
+      - AXONIQ_AXONSERVER_HOSTNAME=axon-server
+    volumes:
+      - axon-data:/axonserver/data
+      - axon-events:/axonserver/events
+      - axon-config:/axonserver/config
+
+  # Zipkin for Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - microservices-network
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - microservices-network
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    networks:
+      - microservices-network
+    depends_on:
+      - prometheus
+
+  # Eureka Discovery Service
+  eureka-server:
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Config Server
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - microservices-network
+    volumes:
+      - ./config-repo:/config-repo
+    environment:
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=file:///config-repo
+    depends_on:
+      - eureka-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Student Service
+  student-service:
+    build:
+      context: ./student-service
+      dockerfile: Dockerfile
+    container_name: student-service
+    ports:
+      - "8089:8089"
+    networks:
+      - microservices-network
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-student:3306/studentdb?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - mysql-student
+      - eureka-server
+      - config-server
+      - zipkin
+
+  # Department Service
+  department-service:
+    build:
+      context: ./department-service
+      dockerfile: Dockerfile
+    container_name: department-service
+    ports:
+      - "8088:8088"
+    networks:
+      - microservices-network
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-department:3306/departmentdb?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - mysql-department
+      - eureka-server
+      - config-server
+      - zipkin
+
+  # Enrollment Service (CQRS with Axon)
+  enrollment-service:
+    build:
+      context: ./enrollment-service
+      dockerfile: Dockerfile
+    container_name: enrollment-service
+    ports:
+      - "8090:8090"
+    networks:
+      - microservices-network
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-enrollment:3306/enrollmentdb?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - AXON_AXONSERVER_SERVERS=axon-server:8124
+    depends_on:
+      - mysql-enrollment
+      - eureka-server
+      - axon-server
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - microservices-network
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+    depends_on:
+      - eureka-server
+      - student-service
+      - department-service
+      - zipkin
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  mysql-student-data:
+  mysql-department-data:
+  mysql-enrollment-data:
+  axon-data:
+  axon-events:
+  axon-config:
+  prometheus-data:
+  grafana-data:

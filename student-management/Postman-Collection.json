@@ -1,0 +1,367 @@
+{
+    "info": {
+        "name": "Student Management Microservices",
+        "description": "Complete API collection for testing microservices architecture",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Department Service",
+            "item": [
+                {
+                    "name": "Get All Departments",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/departments/getAllDepartments",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "departments",
+                                "getAllDepartments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Department by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/departments/getDepartment/1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "departments",
+                                "getDepartment",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Department",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Computer Science\",\n  \"location\": \"Building A\",\n  \"phone\": \"123456789\",\n  \"head\": \"Dr. Smith\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/departments/addDepartment",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "departments",
+                                "addDepartment"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Student Service",
+            "item": [
+                {
+                    "name": "Get All Students",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/students/getAllStudents",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "students",
+                                "getAllStudents"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Student by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/students/getStudent/1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "students",
+                                "getStudent",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Student",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"987654321\",\n  \"dateOfBirth\": \"2000-01-15\",\n  \"address\": \"123 Main St\",\n  \"departmentId\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/students/addStudent",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "students",
+                                "addStudent"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Enrollment Service (CQRS)",
+            "item": [
+                {
+                    "name": "Create Enrollment (Command)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"studentId\": 1,\n  \"courseId\": 101\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/enrollments",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "enrollments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Enrollment by ID (Query)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/enrollments/{{enrollmentId}}",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "enrollments",
+                                "{{enrollmentId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Enrollments by Student (Query)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/enrollments/student/1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "enrollments",
+                                "student",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Enrollment Status (Command)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"APPROVED\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/enrollments/{{enrollmentId}}/status",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "enrollments",
+                                "{{enrollmentId}}",
+                                "status"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health Checks",
+            "item": [
+                {
+                    "name": "Eureka Health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8761/actuator/health",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8761",
+                            "path": [
+                                "actuator",
+                                "health"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "API Gateway Health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/actuator/health",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "actuator",
+                                "health"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Student Service Health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8089/actuator/health",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8089",
+                            "path": [
+                                "actuator",
+                                "health"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Resilience Testing",
+            "item": [
+                {
+                    "name": "Test Rate Limiter (Run multiple times)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8080/students/getAllStudents",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "students",
+                                "getAllStudents"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Test Circuit Breaker (with invalid dept)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"111111111\",\n  \"departmentId\": 9999\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8080/students/addStudent",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8080",
+                            "path": [
+                                "students",
+                                "addStudent"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

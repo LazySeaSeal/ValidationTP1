@@ -15,7 +15,7 @@
     <description>Enrollment Service with CQRS and Axon Framework</description>
     <properties>
         <java.version>17</java.version>
-        <axon.version>4.10.4</axon.version>
+        <axon.version>4.10.3</axon.version>
     </properties>
     <dependencyManagement>
         <dependencies>
